@@ -1,0 +1,32 @@
+name: Simulated Azure Functions deployment
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Deployment environment
+        type: string
+        required: true
+      environment_name_in_azure_function_names:
+        description: Environment suffix used in Azure Function names
+        type: string
+        required: true
+      azure_function_to_deploy:
+        description: Function name to deploy, or "all"
+        type: string
+        required: true
+
+jobs:
+  simulate-deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show deployment parameters
+        env:
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.environment }}
+          FUNCTION_NAME_SUFFIX: ${{ inputs.environment_name_in_azure_function_names }}
+          AZURE_FUNCTION_TO_DEPLOY: ${{ inputs.azure_function_to_deploy }}
+        run: |
+          echo "SIMULATION ONLY - no Azure resources will be changed."
+          echo "Environment: ${DEPLOYMENT_ENVIRONMENT}"
+          echo "Azure Function name suffix: ${FUNCTION_NAME_SUFFIX}"
+          echo "Function selection: ${AZURE_FUNCTION_TO_DEPLOY}"
