@@ -1,0 +1,58 @@
+name: CI and conditional deployments
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+  workflow_dispatch:
+    inputs:
+      deployment_env:
+        description: Environment to deploy
+        type: choice
+        options:
+          - dev
+          - preprod
+          - prod
+        required: true
+      azure_function_to_deploy:
+        description: Function name to deploy, or "all"
+        type: string
+        default: all
+        required: false
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report CI success
+        run: echo "CI passed; evaluating deployment conditions."
+
+  deploy-dev:
+    needs: ci
+    if: ${{ github.ref_name == 'dev' || inputs.deployment_env == 'dev' }}
+    uses: ./.github/workflows/deploy-azf-data-load.yml
+    with:
+      environment: dev
+      environment_name_in_azure_function_names: dev
+      azure_function_to_deploy: ${{ inputs.azure_function_to_deploy || 'all' }}
+
+  deploy-preprod:
+    needs: ci
+    if: ${{ github.ref_name == 'preprod' || inputs.deployment_env == 'preprod' }}
+    uses: ./.github/workflows/deploy-azf-data-load.yml
+    with:
+      environment: preprod
+      environment_name_in_azure_function_names: ppd
+      azure_function_to_deploy: ${{ inputs.azure_function_to_deploy || 'all' }}
+
+  deploy-prod:
+    needs: ci
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref_name == 'production' && inputs.deployment_env == 'prod' }}
+    uses: ./.github/workflows/deploy-azf-data-load.yml
+    with:
+      environment: prod
+      environment_name_in_azure_function_names: prd
+      azure_function_to_deploy: ${{ inputs.azure_function_to_deploy || 'all' }}
